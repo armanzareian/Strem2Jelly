@@ -1,0 +1,14 @@
+{
+    "name": "telegram-download-bot",
+    "version": "1.0.0",
+    "description": "Telegram bot for URL processing and file download",
+    "main": "bot.js",
+    "dependencies": {
+      "axios": "^0.27.2",
+      "dotenv": "^16.0.3",
+      "input": "^1.0.1",
+      "node-telegram-bot-api": "^0.61.0",
+      "telegram": "^2.15.5",
+      "mongoose": "^6.9.0"
+    }
+}

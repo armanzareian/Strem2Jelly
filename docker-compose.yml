@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  jellyfin:
+    image: jellyfin/jellyfin
+    container_name: jellyfin
+    user: root
+    network_mode: "host"
+    volumes:
+      - ${JELLYFIN_CONFIG_PATH}:/config
+      - ${JELLYFIN_CACHE_PATH}:/cache
+      - ${JELLYFIN_MEDIA_PATH}:/media
+    restart: unless-stopped
+
+  stremio:
+    image: stremio/server:v4.20.8
+    container_name: stremio-server
+    ports:
+      - "11470:11470"
+      - "11471:11471"
+    volumes:
+      - ./stremio-config:/root/.stremio-server
+    environment:
+      - NODE_ENV=production
+      - STREMIO_TRANSCODING_SERVER_URL=http://127.0.0.1:11470
+    user: root
+    restart: unless-stopped
+
+  telegram-bot:
+    build: ./strem2jelly
+    container_name: tlg-bot-strem2jelly
+    user: root
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - ADMIN_USERS=${ADMIN_USERS}
+      - JELLYFIN_API_URL=${JELLYFIN_API_URL}
+      - JELLYFIN_API_KEY=${JELLYFIN_API_KEY}
+      - JELLYFIN_USER_ID=${JELLYFIN_USER_ID}
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
+      - PHONE_NUMBER=${PHONE_NUMBER}
+      - MONGODB_URI=${MONGODB_URI}
+      - MEDIA_FOLDER_PATH=${JELLYFIN_MEDIA_PATH}  # Reuse the same variable
+    volumes:
+      - ${MEDIA_FOLDER_PATH}:${MEDIA_FOLDER_PATH}  # Reuse for the bot
+    restart: unless-stopped
