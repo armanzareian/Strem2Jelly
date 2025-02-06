@@ -581,7 +581,7 @@ async function handleDownload(msg) {
 
   // Check if the URL starts with '127.0.0.1:11471' and modify if necessary
   if (originalUrl.startsWith('http://127.0.0.1:11471')) {
-    downloadUrl = originalUrl.replace('127.0.0.1:11471', '127.0.0.1:11470');
+    downloadUrl = originalUrl.replace('127.0.0.1:11471', 'stremio:11470');
   }
 
   try {
