@@ -1,11 +1,16 @@
 version: '3.8'
 
+networks:
+  strem2jelly_network:  # Define a shared network
+    driver: bridge
+
 services:
   jellyfin:
     image: jellyfin/jellyfin
-    container_name: jellyfin
+    container_name: strem2jelly-jellyfin
     user: root
-    network_mode: "host"
+    networks:
+      - strem2jelly_network
     volumes:
       - ${JELLYFIN_CONFIG_PATH}:/config
       - ${JELLYFIN_CACHE_PATH}:/cache
@@ -14,7 +19,9 @@ services:
 
   stremio:
     image: stremio/server:v4.20.8
-    container_name: stremio-server
+    container_name: strem2jelly-stremio
+    networks:
+      - strem2jelly_network
     ports:
       - "11470:11470"
       - "11471:11471"
@@ -28,7 +35,9 @@ services:
 
   telegram-bot:
     build: ./strem2jelly
-    container_name: tlg-bot-strem2jelly
+    container_name: strem2jelly-tlg-bot
+    networks:
+      - strem2jelly_network
     user: root
     environment:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
@@ -40,7 +49,38 @@ services:
       - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
       - PHONE_NUMBER=${PHONE_NUMBER}
       - MONGODB_URI=${MONGODB_URI}
-      - MEDIA_FOLDER_PATH=${JELLYFIN_MEDIA_PATH}  # Reuse the same variable
+      - MEDIA_FOLDER_PATH=${JELLYFIN_MEDIA_PATH}
     volumes:
-      - ${MEDIA_FOLDER_PATH}:${MEDIA_FOLDER_PATH}  # Reuse for the bot
+      - ${MEDIA_FOLDER_PATH}:${MEDIA_FOLDER_PATH}
     restart: unless-stopped
+
+  reverse-proxy:
+    image: nginxproxy/nginx-proxy
+    container_name: strem2jelly-proxy
+    networks:
+      - strem2jelly_network
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx-proxy/certs:/etc/nginx/certs
+      - ./nginx-proxy/vhost.d:/etc/nginx/vhost.d
+      - ./nginx-proxy/html:/usr/share/nginx/html
+    restart: unless-stopped
+
+  # letsencrypt:
+  #   image: nginxproxy/acme-companion
+  #   container_name: strem2jelly-letsencrypt
+  #   networks:
+  #     - strem2jelly_network
+  #   environment:
+  #     - DEFAULT_EMAIL=${LETSENCRYPT_EMAIL}
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #     - ./nginx-proxy/certs:/etc/nginx/certs
+  #     - ./nginx-proxy/vhost.d:/etc/nginx/vhost.d
+  #     - ./nginx-proxy/html:/usr/share/nginx/html
+  #   depends_on:
+  #     - reverse-proxy
+  #   restart: unless-stopped
