@@ -9,6 +9,8 @@ services:
     image: jellyfin/jellyfin
     container_name: strem2jelly-jellyfin
     user: root
+    ports:
+      - "8096:8096"
     networks:
       - strem2jelly_network
     volumes:
