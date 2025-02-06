@@ -2,7 +2,7 @@ version: '3.8'
 
 networks:
   strem2jelly_network:  # Define a shared network
-    driver: bridge
+    driver: host
 
 services:
   jellyfin:
